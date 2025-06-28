@@ -51,3 +51,8 @@ console.log("Received body:", req.body);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };
+
+
+exports.viewLead = async (req,res) =>{
+
+};
