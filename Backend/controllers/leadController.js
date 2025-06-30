@@ -53,6 +53,13 @@ console.log("Received body:", req.body);
 };
 
 
-exports.viewLead = async (req,res) =>{
+exports.viewLead = async (req, res) => {
+  try {
+    const [rows] = await db.execute("SELECT * FROM leads ORDER BY LID DESC");
 
+    res.status(200).json(rows); // Send all rows as JSON
+  } catch (error) {
+    console.error("Error fetching leads:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 };

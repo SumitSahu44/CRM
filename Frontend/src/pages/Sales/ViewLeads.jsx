@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useEffect, useState } from 'react';
 import { FiPhone } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
 
@@ -56,6 +56,10 @@ const dummyLeads = [
 const ViewLeads = () => {
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+    const [leads, setLeads] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+
   const [formData, setFormData] = useState({
     leadId: "",
     date: "",
@@ -126,19 +130,19 @@ const ViewLeads = () => {
   };
 
   const handleEdit = (leadId) => {
-    const leadToEdit = dummyLeads.find((lead) => lead.id === leadId);
+    const leadToEdit = leads.find((lead) => lead.LID === leadId);
     if (leadToEdit) {
       setFormData({
-        leadId: leadToEdit.id,
-        date: leadToEdit.date,
-        source: leadToEdit.source,
-        businessName: leadToEdit.businessName,
-        clientName: leadToEdit.clientName,
-        contactNumber: leadToEdit.contactNumber,
-        requirement: leadToEdit.requirement,
-        leadStatus: leadToEdit.status,
-        remark: leadToEdit.remark,
-        followupDate: leadToEdit.followupDate,
+        leadId: leadToEdit.LID,
+        date: leadToEdit.Date,
+        source: leadToEdit.Source,
+        businessName: leadToEdit.BusinessName,
+        clientName: leadToEdit.ClientName,
+        contactNumber: leadToEdit.ContactNumber,
+        requirement: leadToEdit.Requirement,
+        leadStatus: leadToEdit.LeadStatus,
+        remark: leadToEdit.Remark,
+        followupDate: leadToEdit.FollowUpDate,
       });
       setIsEditMode(true);
       setShowModal(true);
@@ -150,6 +154,36 @@ const ViewLeads = () => {
     // In a real app, remove from dummyLeads or make an API call
     // For now, just log the action
   };
+
+
+  const fetchLeads = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/leads'); // Your backend endpoint
+      const data = await response.json();
+
+      if (response.ok) {
+        setLeads(data); // Set fetched leads into state
+      } else {
+        alert(data.message || "Failed to fetch leads");
+      }
+    } catch (error) {
+      console.error("Error fetching leads:", error);
+      alert("Something went wrong while fetching leads.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLeads(); // Fetch on component mount
+  }, []);
+
+
+const formatDateForInput = (isoDate) => {
+  if (!isoDate) return '';
+  return new Date(isoDate).toISOString().split('T')[0]; // gives 'YYYY-MM-DD'
+};
+
 
   return (
    <div className="border py-4 px-1 w-[100%]">
@@ -183,49 +217,62 @@ const ViewLeads = () => {
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-        <table className="min-w-full divide-y divide-gray-200 bg-white">
-          <thead className="bg-gray-50">
+     <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+      <table className="min-w-full divide-y divide-gray-200 bg-white">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lead ID</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Business Name</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client Name</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requirement</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lead Status</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remark</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Follow-up</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {loading ? (
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lead ID</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Business Name</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client Name</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requirement</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lead Status</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remark</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Follow-up</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <td colSpan="12" className="text-center py-4 text-gray-500">
+                Loading leads...
+              </td>
             </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {dummyLeads.map((lead) => (
+          ) : leads.length === 0 ? (
+            <tr>
+              <td colSpan="12" className="text-center py-4 text-gray-500">
+                No leads found.
+              </td>
+            </tr>
+          ) : (
+            leads.map((lead) => (
               <tr key={lead.id} className="hover:bg-gray-50">
-                <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{lead.id}</td>
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{lead.date}</td>
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{lead.source}</td>
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{lead.businessName}</td>
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{lead.clientName}</td>
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{lead.contactNumber}</td>
-                <td className="px-4 py-2 text-sm text-gray-500 max-w-xs truncate">{lead.requirement}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{lead.LID}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{formatDateForInput(lead.Date)}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{lead.Source}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{lead.BusinessName}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{lead.ClientName}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{lead.ContactNumber}</td>
+                <td className="px-4 py-2 text-sm text-gray-500 max-w-xs truncate">{lead.Requirement}</td>
                 <td className="px-4 py-2 whitespace-nowrap">
                   <span
                     className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      lead.status === "New"
+                      lead.LeadStatus === "No Response"
                         ? "bg-blue-100 text-blue-800"
                         : lead.status === "Closed"
                         ? "bg-green-100 text-green-800"
                         : "bg-yellow-100 text-yellow-800"
                     }`}
                   >
-                    {lead.status}
+                    {lead.LeadStatus}
                   </span>
                 </td>
-                <td className="px-4 py-2 text-sm text-gray-500 max-w-xs truncate">{lead.remark}</td>
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{lead.followupDate}</td>
+                <td className="px-4 py-2 text-sm text-gray-500 max-w-xs truncate">{lead.Remark}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{formatDateForInput(lead.FollowUpDate)}</td>
                 <td className="px-4 py-2 flex whitespace-nowrap text-sm font-medium">
                   <a href={`tel:${lead.contactNumber}`} className="text-green-600 hover:text-green-800 mr-3" title="Call">
                     <FiPhone size={18} />
@@ -241,18 +288,19 @@ const ViewLeads = () => {
                   </a>
                 </td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
-                  <button onClick={() => handleEdit(lead.id)} className="text-blue-600 hover:text-blue-900 mr-3">
+                  <button onClick={() => handleEdit(lead.LID)} className="text-blue-600 hover:text-blue-900 mr-3">
                     Edit
                   </button>
-                  <button onClick={() => handleDelete(lead.id)} className="text-red-600 hover:text-red-900">
+                  <button onClick={() => handleDelete(lead.LID)} className="text-red-600 hover:text-red-900">
                     Delete
                   </button>
                 </td>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
 
       {/* Modal */}
       {showModal && (
@@ -305,13 +353,14 @@ const ViewLeads = () => {
                       />
                     </svg>
                   </div>
-                  <input
+                 <input
                     type="date"
                     name="date"
-                    value={formData.date}
+                    value={formatDateForInput(formData.date)}
                     onChange={handleChange}
                     className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                   />
+
                 </div>
               </div>
 
@@ -481,7 +530,7 @@ const ViewLeads = () => {
                   <input
                     type="date"
                     name="followupDate"
-                    value={formData.followupDate}
+                    value={formatDateForInput(formData.followupDate)}
                     onChange={handleChange}
                     className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                   />
