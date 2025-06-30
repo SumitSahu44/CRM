@@ -301,6 +301,7 @@ const ViewLeads = () => {
               </svg>
             </button>
 
+
             <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-4 sticky top-0 z-10">
               <h1 className="text-2xl font-bold text-white">{isEditMode ? "Edit Lead" : "Add New Lead"}</h1>
               <p className="text-blue-100 text-sm">
