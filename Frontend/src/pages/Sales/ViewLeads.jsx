@@ -2,63 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { FiPhone } from "react-icons/fi";
 import { FaWhatsapp } from "react-icons/fa";
 
-const dummyLeads = [
-  {
-    id: "LD-1001",
-    date: "28-06-2025",
-    source: "Justdial",
-    businessName: "ABC Corp",
-    clientName: "John Doe",
-    contactNumber: "+91 9876543210",
-    requirement: "Looking for CRM software with mobile app",
-    status: "New",
-    remark: "Interested in demo",
-    followupDate: "30-06-2025",
-  },
-  {
-    id: "LD-1002",
-    date: "28-06-2025",
-    source: "Justdial",
-    businessName: "ABC Corp",
-    clientName: "John Doe",
-    contactNumber: "+91 9876543210",
-    requirement: "Looking for CRM software with mobile app",
-    status: "New",
-    remark: "Interested in demo",
-    followupDate: "30-06-2025",
-  },
-  {
-    id: "LD-1003",
-    date: "28-06-2025",
-    source: "Justdial",
-    businessName: "ABC Corp",
-    clientName: "John Doe",
-    contactNumber: "+91 9876543210",
-    requirement: "Looking for CRM software with mobile app",
-    status: "New",
-    remark: "Interested in demo",
-    followupDate: "30-06-2025",
-  },
-  {
-    id: "LD-1004",
-    date: "28-06-2025",
-    source: "Justdial",
-    businessName: "ABC Corp",
-    clientName: "John Doe",
-    contactNumber: "+91 9876543210",
-    requirement: "Looking for CRM software with mobile app",
-    status: "New",
-    remark: "Interested in demo",
-    followupDate: "25-06-2024",
-  },
-];
-
 const ViewLeads = () => {
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-    const [leads, setLeads] = useState([]);
+  const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
-
 
   const [formData, setFormData] = useState({
     leadId: "",
@@ -74,45 +22,58 @@ const ViewLeads = () => {
   });
 
   const handleChange = (e) => {
-  const { name, value } = e.target;
-  setFormData((prev) => ({
-    ...prev,
-    [name]: value,
-  }));
-};
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
+  const handleSubmit = async (e) => {
+  e.preventDefault();
 
-  const handleSubmit = async(e) => {
-    e.preventDefault();
+  if (
+    !formData.leadId ||
+    !formData.date ||
+    !formData.source ||
+    !formData.businessName ||
+    !formData.clientName
+  ) {
+    alert("Please fill all required fields: Lead ID, Date, Source, Business Name, Client Name");
+    return;
+  }
 
-    if (
-  !formData.leadId ||
-  !formData.date ||
-  !formData.source ||
-  !formData.businessName ||
-  !formData.clientName
-) {
-  alert("Please fill all required fields: Lead ID, Date, Source, Business Name, Client Name");
-  return;
-}
+  try {
+    const payload = {
+      ...formData,
+      date: new Date(formData.date).toISOString(),
+      followupDate: formData.followupDate ? new Date(formData.followupDate).toISOString() : null
+    };
+
+    let response;
+    let data;
 
     if (isEditMode) {
-      // Update existing lead
-      console.log("Updated lead:", formData);
+      response = await fetch(`http://localhost:5000/api/leads/${formData.leadId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      data = await response.json();
+      if (response.ok) fetchLeads(); // ✅ reliable
     } else {
-      // Add new lead
-      console.log("New lead:", formData);
-      // Optionally, add to dummyLeads (in a real app, this would be an API call)
-      const response = await fetch('http://localhost:5000/api/leads', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(formData),
-    });
-    const data = await response.json();
-    alert(data.message)
+      response = await fetch('http://localhost:5000/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      data = await response.json();
+      if (response.ok) fetchLeads(); // ✅ reliable
     }
+
+    alert(data.message || "Lead saved!");
     setShowModal(false);
     setIsEditMode(false);
     setFormData({
@@ -127,7 +88,12 @@ const ViewLeads = () => {
       remark: "",
       followupDate: "",
     });
-  };
+  } catch (error) {
+    console.error("Error submitting form:", error.message);
+    alert("Something went wrong. Please try again.");
+  }
+};
+
 
   const handleEdit = (leadId) => {
     const leadToEdit = leads.find((lead) => lead.LID === leadId);
@@ -149,20 +115,35 @@ const ViewLeads = () => {
     }
   };
 
-  const handleDelete = (leadId) => {
-    console.log("Delete lead:", leadId);
-    // In a real app, remove from dummyLeads or make an API call
-    // For now, just log the action
-  };
+  const handleDelete = async (leadId) => {
+    if (!window.confirm("Are you sure you want to delete this lead?")) return;
 
-
-  const fetchLeads = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/leads'); // Your backend endpoint
+      const response = await fetch(`http://localhost:5000/api/leads/${leadId}`, {
+        method: 'DELETE',
+      });
+
       const data = await response.json();
 
       if (response.ok) {
-        setLeads(data); // Set fetched leads into state
+        setLeads((prevLeads) => prevLeads.filter((lead) => lead.LID !== leadId));
+        alert(data.message || "Lead deleted.");
+      } else {
+        alert(data.message || "Failed to delete lead.");
+      }
+    } catch (error) {
+      console.error("Delete error:", error.message);
+      alert("Something went wrong while deleting.");
+    }
+  };
+
+  const fetchLeads = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/leads');
+      const data = await response.json();
+
+      if (response.ok) {
+        setLeads(data);
       } else {
         alert(data.message || "Failed to fetch leads");
       }
@@ -175,18 +156,21 @@ const ViewLeads = () => {
   };
 
   useEffect(() => {
-    fetchLeads(); // Fetch on component mount
+    fetchLeads();
   }, []);
 
-
-const formatDateForInput = (isoDate) => {
+  const formatDateForInput = (isoDate) => {
   if (!isoDate) return '';
-  return new Date(isoDate).toISOString().split('T')[0]; // gives 'YYYY-MM-DD'
+  const date = new Date(isoDate);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 
   return (
-   <div className="border py-4 px-1 w-[100%]">
+    <div className="border py-4 px-1 w-[100%]">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">All Leads</h2>
         <div className="flex gap-4">
@@ -231,6 +215,7 @@ const formatDateForInput = (isoDate) => {
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lead Status</th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remark</th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Follow-up</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status 2</th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
           </tr>
@@ -273,6 +258,7 @@ const formatDateForInput = (isoDate) => {
                 </td>
                 <td className="px-4 py-2 text-sm text-gray-500 max-w-xs truncate">{lead.Remark}</td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{formatDateForInput(lead.FollowUpDate)}</td>
+    
                 <td className="px-4 py-2 flex whitespace-nowrap text-sm font-medium">
                   <a href={`tel:${lead.contactNumber}`} className="text-green-600 hover:text-green-800 mr-3" title="Call">
                     <FiPhone size={18} />
@@ -536,6 +522,11 @@ const formatDateForInput = (isoDate) => {
                   />
                 </div>
               </div>
+
+
+
+              
+              
 
               <div className="pt-6 flex justify-end space-x-3 sticky bottom-0 bg-white pb-2">
                 <button
